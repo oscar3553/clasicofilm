@@ -8,7 +8,7 @@
     </extension>
     <extension point="xbmc.addon.metadata">
         <summary lang="es">Cine Clásico - Versión Heritage</summary>
-        <description lang="es">v2.7.0: Basada en la v1.8.5 estable. Recuperado logo, reproducción Dzen y menú de 3 carpetas con títulos dorados.</description>
+        <description lang="es">v2.9.0: Soporte añadido para reproductores Dzen.ru y Mail.ru con selección de servidor.</description>
         <platform>all</platform>
         <assets>
             <icon>icon.png</icon>
