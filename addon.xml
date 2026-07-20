@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<addon id="plugin.video.clasicofilm" name="Clasicofilm" version="2.9.4" provider-name="Gemini">
+<addon id="plugin.video.clasicofilm" name="Clasicofilm" version="2.9.5" provider-name="Gemini">
 
     <requires>
         <import addon="xbmc.python" version="3.0.0"/>
@@ -12,7 +12,7 @@
 
     <extension point="xbmc.addon.metadata">
         <summary lang="es">Cine Clásico - Versión Heritage</summary>
-        <description lang="es">v2.9.4: Añadido soporte ResolveURL para la reproducción de servidores externos como Mail.ru en Android y Windows.</description>
+        <description lang="es">v2.9.5: Añadido soporte ResolveURL para la reproducción de servidores externos como Mail.ru en Android y Windows.</description>
         <platform>all</platform>
         <assets>
             <icon>icon.png</icon>
