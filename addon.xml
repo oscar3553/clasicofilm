@@ -1,9 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<addon id="plugin.video.clasicofilm" name="Clasicofilm" version="2.9.6" provider-name="Gemini">
+<addon id="plugin.video.clasicofilm" name="Clasicofilm" version="2.9.7" provider-name="Gemini">
 
     <requires>
         <import addon="xbmc.python" version="3.0.0"/>
-        <import addon="script.module.resolveurl"/>
     </requires>
 
     <extension point="xbmc.python.pluginsource" library="main.py">
@@ -12,7 +11,7 @@
 
     <extension point="xbmc.addon.metadata">
         <summary lang="es">Cine Clásico - Versión Heritage</summary>
-        <description lang="es">v2.9.6: Corregida dependencia ResolveURL para solucionar error de instalación.</description>
+        <description lang="es">v2.9.7: Corregido error de instalación de dependencias.</description>
         <platform>all</platform>
         <assets>
             <icon>icon.png</icon>
