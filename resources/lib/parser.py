@@ -40,50 +40,34 @@ def resolve_dzen(url):
     return None
 
 def resolve_mailru(url):
-    log(f"Resolviendo Mail.ru MPD: {url}")
+    log(f"Resolviendo Mail.ru HTML Embed: {url}")
     
     headers = {
         'User-Agent': UA_STR,
-        'Referer': 'https://my.mail.ru/',
-        'Accept': 'application/json, text/javascript, */*; q=0.01'
+        'Referer': 'https://my.mail.ru/'
     }
     
-    # Extraer ID del video limpiando slashes y parametros extra
-    clean_url = url.split('?')[0].rstrip('/')
-    video_id = clean_url.split('/')[-1]
-    
-    log(f"ID de video Mail.ru extraido: {video_id}")
-    
-    api_url = f"https://my.mail.ru/v/api/video/item/{video_id}"
-
-    json_data = fetch(api_url, headers=headers)
-    if not json_data:
-        log("No se obtuvieron datos de la API de Mail.ru")
+    # 1. Obtener el HTML directamente de la URL del Embed
+    html = fetch(url, headers=headers)
+    if not html:
         return None
 
-    try:
-        data = json.loads(json_data)
-        
-        # Opcion A: Buscar en el listado 'videos' del JSON
-        videos = data.get('videos', [])
-        for v in videos:
-            stream_url = v.get('url', '')
-            if 'stream.mpd' in stream_url or '.mpd' in stream_url:
-                if stream_url.startswith('//'):
-                    stream_url = 'https:' + stream_url
-                log(f"URL MPD encontrada en JSON: {stream_url}")
-                return stream_url
-                
-        # Opcion B: Buscar cualquier URL .mpd mediante Regex si falla la estructura
-        match = re.search(r'"(https?:\\?/\\?/[^"]+?\.mpd[^"]*)"', json_data)
-        if match:
-            mpd_url = match.group(1).replace('\\/', '/')
-            if mpd_url.startswith('//'):
-                mpd_url = 'https:' + mpd_url
-            log(f"URL MPD encontrada por Regex: {mpd_url}")
-            return mpd_url
+    # 2. Buscar manifest .mpd o enlaces de video en el HTML/JSON embebido
+    mpd_match = re.search(r'"(https?:\\?/\\?/[^"]+?\.mpd[^"]*)"', html)
+    if mpd_match:
+        mpd_url = mpd_match.group(1).replace('\\/', '/')
+        if mpd_url.startswith('//'):
+            mpd_url = 'https:' + mpd_url
+        log(f"MPD encontrado directamente en HTML: {mpd_url}")
+        return mpd_url
 
-    except Exception as e:
-        log(f"Error procesando JSON de Mail.ru: {e}")
+    # 3. Si no hay .mpd, buscar enlaces .mp4 directos de Mail.ru
+    mp4_match = re.search(r'"(https?:\\?/\\?/[^"]+?\.mp4[^"]*)"', html)
+    if mp4_match:
+        mp4_url = mp4_match.group(1).replace('\\/', '/')
+        if mp4_url.startswith('//'):
+            mp4_url = 'https:' + mp4_url
+        log(f"MP4 encontrado en HTML: {mp4_url}")
+        return mp4_url
 
     return None
