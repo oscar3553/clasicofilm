@@ -44,11 +44,16 @@ def resolve_mailru(url):
     
     headers = {
         'User-Agent': UA_STR,
-        'Referer': 'https://my.mail.ru/'
+        'Referer': 'https://my.mail.ru/',
+        'Accept': 'application/json, text/javascript, */*; q=0.01'
     }
     
-    # Extraer ID del video de la URL embebida
-    video_id = url.split('/')[-1]
+    # Extraer ID del video limpiando slashes y parametros extra
+    clean_url = url.split('?')[0].rstrip('/')
+    video_id = clean_url.split('/')[-1]
+    
+    log(f"ID de video Mail.ru extraido: {video_id}")
+    
     api_url = f"https://my.mail.ru/v/api/video/item/{video_id}"
 
     json_data = fetch(api_url, headers=headers)
@@ -59,20 +64,22 @@ def resolve_mailru(url):
     try:
         data = json.loads(json_data)
         
-        # Buscar la URL que contiene stream.mpd en la respuesta JSON
+        # Opcion A: Buscar en el listado 'videos' del JSON
         videos = data.get('videos', [])
         for v in videos:
             stream_url = v.get('url', '')
-            if 'stream.mpd' in stream_url or stream_url.endswith('.mpd'):
+            if 'stream.mpd' in stream_url or '.mpd' in stream_url:
                 if stream_url.startswith('//'):
                     stream_url = 'https:' + stream_url
-                log(f"URL MPD encontrada: {stream_url}")
+                log(f"URL MPD encontrada en JSON: {stream_url}")
                 return stream_url
                 
-        # Si no lo encuentra en 'videos', buscar mediante expresion regular en todo el JSON
-        match = re.search(r'"(https?:\\?/\\?/[^"]+stream\.mpd[^"]*)"', json_data)
+        # Opcion B: Buscar cualquier URL .mpd mediante Regex si falla la estructura
+        match = re.search(r'"(https?:\\?/\\?/[^"]+?\.mpd[^"]*)"', json_data)
         if match:
             mpd_url = match.group(1).replace('\\/', '/')
+            if mpd_url.startswith('//'):
+                mpd_url = 'https:' + mpd_url
             log(f"URL MPD encontrada por Regex: {mpd_url}")
             return mpd_url
 
