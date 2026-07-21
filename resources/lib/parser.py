@@ -1,4 +1,4 @@
-import re, urllib.request, urllib.parse, json, xbmc
+import re, urllib.request, urllib.parse, json, xbmc, xbmcgui
 
 UA_STR = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
 
@@ -29,7 +29,6 @@ def extract(post_url):
     for link in mail_links:
         streams.append(('Mail.ru', link))
         
-    log(f"Enlaces extraidos del post: {streams}")
     return streams
 
 def resolve_dzen(url):
@@ -40,34 +39,36 @@ def resolve_dzen(url):
     return None
 
 def resolve_mailru(url):
-    log(f"Resolviendo Mail.ru HTML Embed: {url}")
+    # Ventana emergente para ver la URL del Embed que recibe
+    xbmcgui.Dialog().ok("DIAGNOSTICO MAIL.RU", f"URL Embed recibida:\n{url}")
     
     headers = {
         'User-Agent': UA_STR,
         'Referer': 'https://my.mail.ru/'
     }
     
-    # 1. Obtener el HTML directamente de la URL del Embed
     html = fetch(url, headers=headers)
+    
     if not html:
+        xbmcgui.Dialog().ok("DIAGNOSTICO MAIL.RU", "El HTML extraido está VACÍO (posible bloqueo de IP/User-Agent)")
         return None
 
-    # 2. Buscar manifest .mpd o enlaces de video en el HTML/JSON embebido
+    # Muestra los primeros 200 caracteres del HTML para comprobar que responde la web
+    xbmcgui.Dialog().ok("DIAGNOSTICO MAIL.RU", f"HTML recibido correctamente ({len(html)} bytes).\nBuscando patrones .mpd / .mp4...")
+
+    # 1. Buscar .mpd
     mpd_match = re.search(r'"(https?:\\?/\\?/[^"]+?\.mpd[^"]*)"', html)
     if mpd_match:
         mpd_url = mpd_match.group(1).replace('\\/', '/')
-        if mpd_url.startswith('//'):
-            mpd_url = 'https:' + mpd_url
-        log(f"MPD encontrado directamente en HTML: {mpd_url}")
+        if mpd_url.startswith('//'): mpd_url = 'https:' + mpd_url
         return mpd_url
 
-    # 3. Si no hay .mpd, buscar enlaces .mp4 directos de Mail.ru
+    # 2. Buscar .mp4
     mp4_match = re.search(r'"(https?:\\?/\\?/[^"]+?\.mp4[^"]*)"', html)
     if mp4_match:
         mp4_url = mp4_match.group(1).replace('\\/', '/')
-        if mp4_url.startswith('//'):
-            mp4_url = 'https:' + mp4_url
-        log(f"MP4 encontrado en HTML: {mp4_url}")
+        if mp4_url.startswith('//'): mp4_url = 'https:' + mp4_url
         return mp4_url
 
+    xbmcgui.Dialog().ok("DIAGNOSTICO MAIL.RU", "No se encontró ningún enlace .mpd ni .mp4 dentro del HTML.")
     return None
