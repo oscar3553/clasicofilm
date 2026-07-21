@@ -5,18 +5,15 @@ from .parser import extract, resolve_dzen, resolve_mailru
 HANDLE = None
 
 def movie_item(m, argv):
-    # Título en dorado para la lista
     label = f"[COLOR gold]{m['title']}[/COLOR]"
     if m['year']: label += f" ({m['year']})"
     li = xbmcgui.ListItem(label=label)
     
-    # Metadatos completos para la ficha técnica
     li.setInfo('video', {
         'title': m['title'], 'plot': m['plot'], 'director': m['director'], 
         'cast': m['cast'], 'mediatype': 'movie', 'year': int(m['year']) if m['year'] else 0
     })
     
-    # Artes con rutas locales para asegurar logo
     li.setArt({
         'thumb': m['image'], 'poster': m['image'], 
         'icon': 'special://home/addons/plugin.video.clasicofilm/icon.png',
@@ -34,29 +31,42 @@ def run(argv):
     if a == 'info_and_play':
         xbmc.executebuiltin('Action(Info)') # Forzamos la ficha al hacer click
         url_post = urllib.parse.unquote(p['url'][0])
+        
+        # 1. Extraer todos los servidores disponibles en el post
         src = extract(url_post)
         
-        mailru = [u for n, u in src if n == 'Mail.ru']
-        dzen = [u for n, u in src if n == 'Dzen']
-        
+        if not src:
+            xbmcgui.Dialog().notification("Clasicofilm", "No se encontraron servidores", xbmcgui.NOTIFICATION_ERROR)
+            return
+
+        selected_stream = None
+
+        # 2. Si hay más de un servidor, mostrar menú de selección
+        if len(src) > 1:
+            options = [f"Servidor: {name}" for name, url in src]
+            idx = xbmcgui.Dialog().select("Selecciona Servidor", options)
+            if idx == -1:
+                return # El usuario canceló el menú
+            selected_stream = src[idx]
+        else:
+            selected_stream = src[0]
+
+        srv_name, srv_url = selected_stream
         final_url = None
         is_mpd = False
 
-        # Prioridad 1: Mail.ru
-        if mailru:
-            final_url = resolve_mailru(mailru[0])
-            if final_url:
-                is_mpd = True
+        # 3. Resolver la URL según el servidor elegido
+        if srv_name == 'Mail.ru':
+            final_url = resolve_mailru(srv_url)
+            is_mpd = True
+        elif srv_name == 'Dzen':
+            final_url = resolve_dzen(srv_url)
 
-        # Prioridad 2: Dzen (si no hay Mail.ru o falló)
-        if not final_url and dzen:
-            final_url = resolve_dzen(dzen[0])
-
-        # Si se encontró una URL de vídeo válida
+        # 4. Enviar a reproducir en Kodi
         if final_url:
             item = xbmcgui.ListItem(path=final_url)
             
-            # Si es un enlace MPEG-DASH (.mpd) de Mail.ru
+            # Configurar InputStream Adaptive si es Mail.ru (.mpd)
             if is_mpd or '.mpd' in final_url:
                 item.setProperty('inputstream', 'inputstream.adaptive')
                 item.setProperty('inputstream.adaptive.manifest_type', 'mpd')
@@ -65,7 +75,7 @@ def run(argv):
             
             xbmcplugin.setResolvedUrl(HANDLE, True, item)
         else:
-            xbmcgui.Dialog().notification("Clasicofilm", "No se pudo obtener el vídeo", xbmcgui.NOTIFICATION_ERROR)
+            xbmcgui.Dialog().notification("Clasicofilm", f"Error al resolver {srv_name}", xbmcgui.NOTIFICATION_ERROR)
             
         return
         
@@ -101,7 +111,7 @@ def run(argv):
             xbmcplugin.endOfDirectory(HANDLE)
         return
 
-    # MENÚ PRINCIPAL (3 CARPETAS)
+    # MENÚ PRINCIPAL
     menu = [('🎬 ÚLTIMAS NOVEDADES', 'latest'), ('🎭 GÉNEROS', 'genres'), ('🔍 BUSCAR', 'search')]
     for label, act in menu:
         li = xbmcgui.ListItem(label=label)
