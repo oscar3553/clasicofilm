@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<addons>
+    <addon id="plugin.video.clasicofilm" name="Clasicofilm" version="2.9.0" provider-name="Gemini"">
+        <requires>
+            <import addon="xbmc.python" version="3.0.0"/>
+        </requires>
+        <extension point="xbmc.python.pluginsource" library="main.py">
+            <provides>video</provides>
+        </extension>
+        <extension point="xbmc.addon.metadata">
+            <summary lang="es">Addon de cine clásico para Kodi</summary>
+            <description lang="es">Acceso y reproducción de películas clásicas desde Blogger con respaldo automático entre Archive.org y Dzen.ru.</description>
+            <platform>all</platform>
+            <assets>
+                <icon>icon.png</icon>
+                <fanart>fanart.jpg</fanart>
+            </assets>
+        </extension>
+    </addon>
+</addons>
