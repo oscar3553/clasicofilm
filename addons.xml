@@ -17,4 +17,9 @@
             </assets>
         </extension>
     </addon>
+    <dir>
+        <info>https://github.io</info>
+        <checksum>https://github.io.md5</checksum>
+        <datadir zip="true">https://github.io</datadir>
+    </dir>
 </addons>
